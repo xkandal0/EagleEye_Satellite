@@ -1,0 +1,9 @@
+# Archivos de datos descargados
+*.bsp
+
+# Archivos temporales de Python
+__pycache__/
+*.pyc
+
+# Archivos de registro de la estación
+*.log

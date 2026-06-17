@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Misión | EagleEye-1</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+</head>
+<body>
+    <header>
+        <div class="logo">🛰️ EAGLEEYE-1 GS</div>
+        <div class="status-bar">
+            ESTADO DE ENLACE: <span id="enlace-status" class="status-los">LOS (SIN SEÑAL)</span>
+        </div>
+        <div class="time-utc" id="reloj-utc">00:00:00 UTC</div>
+    </header>
+
+    <div class="dashboard">
+        <aside class="panel-lateral">
+            <section class="caja-datos">
+                <h2>TELEMETRÍA CRÍTICA</h2>
+                <div class="dato-fila"><span>MODO FSW:</span> <strong id="val-modo">ESPERANDO...</strong></div>
+                <div class="dato-fila"><span>ÚLTIMO CICLO:</span> <strong id="val-seq">--</strong></div>
+                <div class="dato-fila"><span>BATERÍA:</span> <strong id="val-bat">-- %</strong></div>
+                <div class="dato-fila"><span>TEMP:</span> <strong id="val-tmp">-- ºC</strong></div>
+                <div class="dato-fila"><span>CONSUMO:</span> <strong id="val-pwr">-- W</strong></div>
+            </section>
+
+            <section class="caja-datos comandos">
+                <h2>UPLINK (TC)</h2>
+                <p>Ventana de comandos habilitada solo en AOS.</p>
+                <button id="btn-payload" class="btn-tactico" disabled>EJECUTAR: PAYLOAD_ON (+10W)</button>
+                <div id="log-comandos" class="consola-mini">Esperando enlace...</div>
+            </section>
+        </aside>
+
+        <main class="panel-central">
+            <section class="visor-orbital">
+                <div class="visor-header">TRAZA ORBITAL (SIMULADOR SGP4)</div>
+                <canvas id="canvas-orbita"></canvas>
+            </section>
+
+            <section class="visor-graficas">
+                <div class="grafica-container">
+                    <canvas id="chart-bat"></canvas>
+                </div>
+                <div class="grafica-container">
+                    <canvas id="chart-tmp"></canvas>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>

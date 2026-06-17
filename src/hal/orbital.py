@@ -22,11 +22,14 @@ class SimuladorOrbital:
         en_eclipse = not geocentrica.is_sunlit(self.efemerides)
         
         # 2. Cálculo de Visibilidad (AOS/LOS)
-        # Verificamos si el satélite está al menos 10 grados por encima del horizonte de Madrid
         diferencia = self.satelite - self.estacion_control
         topocentrica = diferencia.at(t)
         alt, az, distance = topocentrica.altaz()
-        
         en_cobertura = alt.degrees > 10.0
         
-        return en_eclipse, en_cobertura
+        # 3. NUEVO: Cálculo Geográfico (Nadir)
+        subpunto = wgs84.subpoint_of(geocentrica)
+        latitud = subpunto.latitude.degrees
+        longitud = subpunto.longitude.degrees
+        
+        return en_eclipse, en_cobertura, latitud, longitud

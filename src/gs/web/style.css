@@ -1,0 +1,12 @@
+/* Añadir al final de src/gs/web/style.css */
+
+canvas#canvas-orbita {
+    width: 100%;
+    height: 100%;
+    background-color: #050508;
+    /* Cargamos un mapa base y lo teñimos de estilo táctico con filtros */
+    background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/World_map_-_low_resolution.svg/1000px-World_map_-_low_resolution.svg.png');
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    filter: sepia(1) hue-rotate(180deg) brightness(0.4) contrast(1.2);
+}

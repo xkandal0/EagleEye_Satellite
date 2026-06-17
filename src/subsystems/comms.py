@@ -6,20 +6,19 @@ class COMMS:
     def __init__(self):
         self.enlace_activo = True
 
-    def generar_paquete_telemetria(self, ciclo, modo, bateria, temperatura, consumo):
+    def generar_paquete_telemetria(self, ciclo, modo, bateria, temperatura, consumo, latitud, longitud):
         paquete = {
             "seq": ciclo,
             "mod": modo,
             "bat": bateria,
             "tmp": temperatura,
-            "pwr": consumo
+            "pwr": consumo,
+            "lat": latitud,
+            "lon": longitud
         }
         return json.dumps(paquete)
 
     def procesar_telecomando(self, comando_raw):
-        """
-        Recibe un string JSON de la estación de tierra y lo convierte en un diccionario.
-        """
         try:
             comando = json.loads(comando_raw)
             return comando

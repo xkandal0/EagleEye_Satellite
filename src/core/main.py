@@ -37,20 +37,22 @@ class OrdenadorABordo:
         self.bat_medida = 100.0
         self.temp_medida = 20.0
         self.en_cobertura = False
+        self.lat_actual = 0.0
+        self.lon_actual = 0.0
         
         self.tiempo_simulacion = datetime(2026, 6, 17, 12, 0, 0, tzinfo=timezone.utc)
 
-        # Configuración de la Radio (Sockets UDP)
         self.udp_ip = "127.0.0.1"
-        self.tx_port = 5005  # Enviar telemetría a la GS
-        self.rx_port = 5006  # Recibir comandos de la GS
+        self.tx_port = 5005
+        self.rx_port = 5006
         
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind((self.udp_ip, self.rx_port))
-        self.sock.setblocking(False)  # Evita que el programa se congele esperando comandos
+        self.sock.setblocking(False)
 
     def tarea_fisica_sensores(self):
-        en_eclipse, self.en_cobertura = self.orbital.evaluar_entorno(self.tiempo_simulacion)
+        en_eclipse, self.en_cobertura, self.lat_actual, self.lon_actual = self.orbital.evaluar_entorno(self.tiempo_simulacion)
+        
         angulo_error = self.adcs.actualizar_orientacion(en_eclipse)
         eficiencia_angulo = math.cos(math.radians(angulo_error))
         generacion_maxima = 40.0 if not en_eclipse else 0.0
@@ -73,7 +75,7 @@ class OrdenadorABordo:
             self.modo_actual = ModoSatelite.NOMINAL
         elif not en_peligro and self.modo_actual == ModoSatelite.INICIO:
             if ciclo > 20: 
-                print(f"[{self.tiempo_simulacion.strftime('%H:%M:%S')}] >> TRANSICIÓN: Arranque completado, entrando a NOMINAL")
+                print(f"[{self.tiempo_simulacion.strftime('%H:%M:%S')}] >> TRANSICIÓN: Arranque completado, NOMINAL")
                 self.modo_actual = ModoSatelite.NOMINAL
 
         if self.modo_actual == ModoSatelite.INICIO or self.modo_actual == ModoSatelite.SEGURO:
@@ -83,7 +85,7 @@ class OrdenadorABordo:
 
     def tarea_recepcion_comandos(self, ciclo):
         if not self.en_cobertura:
-            return  # No puede recibir nada si no hay línea de visión
+            return
 
         try:
             datos, _ = self.sock.recvfrom(1024)
@@ -94,7 +96,7 @@ class OrdenadorABordo:
             if comando_procesado:
                 self.ejecutar_comando(comando_procesado)
         except BlockingIOError:
-            pass  # No hay comandos en la cola en este momento
+            pass
 
     def ejecutar_comando(self, comando):
         accion = comando.get("cmd")
@@ -103,24 +105,23 @@ class OrdenadorABordo:
             self.consumo_actual += carga_w
             print(f"EJECUTANDO TC: Carga útil encendida (+{carga_w}W). Consumo total: {self.consumo_actual}W")
         elif accion == "PAYLOAD_ON":
-            print("RECHAZADO: No se puede encender la carga útil fuera del modo NOMINAL.")
+            print("RECHAZADO: Fuera de modo NOMINAL.")
 
     def tarea_comunicaciones(self, ciclo):
         paquete_tx = self.comms.generar_paquete_telemetria(
-            ciclo, self.modo_actual.name, self.bat_medida, self.temp_medida, self.consumo_actual
+            ciclo, self.modo_actual.name, self.bat_medida, self.temp_medida, self.consumo_actual, self.lat_actual, self.lon_actual
         )
         self.obdh.almacenar_paquete(paquete_tx)
         
         if self.en_cobertura:
             datos_volcados = self.obdh.volcar_memoria()
             if datos_volcados:
-                print(f"[{self.tiempo_simulacion.strftime('%H:%M:%S')}] ====== TRANSMITIENDO {len(datos_volcados)} PAQUETES A GS ======")
+                print(f"[{self.tiempo_simulacion.strftime('%H:%M:%S')}] ====== TRANSMITIENDO {len(datos_volcados)} PAQUETES ======")
                 for paquete in datos_volcados:
-                    # Envío real a través del socket UDP
                     self.sock.sendto(paquete.encode('utf-8'), (self.udp_ip, self.tx_port))
 
     def ejecutar_planificador(self):
-        print("Iniciando FSW EagleEye-1 (Radio UDP Activada)...")
+        print("Iniciando FSW EagleEye-1 (Telemetría Geográfica Activada)...")
         ciclo = 0
         while True:
             ciclo += 1
